@@ -207,28 +207,24 @@ public class LdapLibrary extends AnnotationLibrary {
     }
 
     @RobotKeyword("Deletes all specified entries from the LDAP server")
-    @ArgumentNames({"baseDN"})
-    public void deleteFromLdap(String basedn) {
+    @ArgumentNames({"baseDn", "scope", "filter"})
+    public void deleteFromLdap(String basedn, String scope, String filter) throws LDAPException {
         if(ldapConnection == null || !ldapConnection.isConnected()) {
             System.out.println("*WARN* There is no current connection to an LDAP server");
             return;
         }
 
-        DeleteRequest deleteRequest =
-                new DeleteRequest(basedn);
-        LDAPResult deleteResult;
-        try
-        {
-            deleteResult = ldapConnection.delete(deleteRequest);
-            // If we get here, the delete was successful
+        SearchResult s = this.performSearch(basedn, scope, filter, (String)null);
+
+        if (s.getEntryCount() == 0) {
+            throw new RuntimeException("No entries to delete.");
         }
-        catch (LDAPException le)
-        {
-            // The delete operation failed.
-            deleteResult = le.toLDAPResult();
-            ResultCode resultCode = le.getResultCode();
-            String errorMessageFromServer = le.getDiagnosticMessage();
-            throw new RuntimeException("LDAP delete returned "+ errorMessageFromServer);
+
+        List<SearchResultEntry> entries = s.getSearchEntries();
+        for(SearchResultEntry entry : entries){
+            String dn = entry.getDN();
+            DeleteRequest deleteRequest = new DeleteRequest(dn);
+            ldapConnection.delete(deleteRequest);
         }
 
     }
