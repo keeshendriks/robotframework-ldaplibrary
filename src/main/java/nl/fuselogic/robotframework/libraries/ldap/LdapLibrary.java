@@ -217,7 +217,7 @@ public class LdapLibrary extends AnnotationLibrary {
         SearchResult s = this.performSearch(basedn, scope, filter, (String)null);
 
         if (s.getEntryCount() == 0) {
-            throw new RuntimeException("No entries to delete.");
+            System.out.println("No entries to delete.");
         }
 
         List<SearchResultEntry> entries = s.getSearchEntries();
